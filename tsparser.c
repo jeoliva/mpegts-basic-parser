@@ -194,7 +194,7 @@ void parseStream(TSStream *stream, uint32_t payload_unit_start_indicator, ABitRe
 void flushStreamData(TSStream *stream)
 {
 	ABitReader bitReader;
-	initABitReader(&bitReader, stream->mBuffer, stream->mBufferSize);
+	initABitReader(&bitReader, (uint8_t *)stream->mBuffer, stream->mBufferSize);
 	
 	parsePES(stream, &bitReader);
 	
