@@ -26,23 +26,22 @@ void parseTSPacket(TSParser *parser, ABitReader *bitReader)
 		printf("Packet with Error. Transport Error indicator: %u\n", transport_error_indicator);
 	
 	payload_unit_start_indicator = getBits(bitReader, 1);
-	//printf("Payload unit start indicator: %u\n", payload_unit_start_indicator);
+	printf("Payload unit start indicator: %u\n", payload_unit_start_indicator);
 	
 	transport_priority = getBits(bitReader, 1);
-	//printf("Transport Priority: %u\n", transport_priority);
+	printf("Transport Priority: %u\n", transport_priority);
 	
 	pid = getBits(bitReader, 13);
-	//printf("PID: 0x%04x\n", pid);
+	printf("PID: 0x%04x\n", pid);
 	
 	transport_scrambling_control = getBits(bitReader, 2);
-	//printf("Transport Scrambling Control: %u\n", transport_scrambling_control);
+	printf("Transport Scrambling Control: %u\n", transport_scrambling_control);
 	
 	adaptation_field_control = getBits(bitReader, 2);
-	//printf("Adaptation field control: %u\n", adaptation_field_control);
+	printf("Adaptation field control: %u\n", adaptation_field_control);
 	
 	continuity_counter = getBits(bitReader, 4);
-	//printf("Continuity Counter: %u\n", continuity_counter);
-	
+	printf("Continuity Counter: %u\n", continuity_counter);
 	
 	if(adaptation_field_control == 2 || adaptation_field_control == 3)
 		parseAdaptationField(parser, bitReader);
@@ -248,9 +247,7 @@ void parsePES(TSStream *stream, ABitReader *bitReader)
             skipBits(bitReader, 1);
             PTS |= getBits(bitReader, 15);
             skipBits(bitReader, 1);
-			
-            // LOGI("PTS = %.2f secs", PTS / 90000.0f);
-			
+	
             optional_bytes_remaining -= 5;
 			
             if (PTS_DTS_flags == 3) 
