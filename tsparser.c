@@ -40,7 +40,7 @@ void parseTSPacket(TSParser *parser, ABitReader *bitReader)
 	sync_byte = getBits(bitReader, 8);
 
 	transport_error_indicator = getBits(bitReader, 1);
-	if(transport_error_indicator != 0)
+	if (transport_error_indicator != 0)
 	{
 		printf("Packet with Error. Transport Error indicator: %u\n", transport_error_indicator);
 	}
@@ -63,26 +63,26 @@ void parseTSPacket(TSParser *parser, ABitReader *bitReader)
 	continuity_counter = getBits(bitReader, 4);
 	printf("Continuity Counter: %u\n", continuity_counter);
 
-	if(adaptation_field_control == 2 || adaptation_field_control == 3)
+	if (adaptation_field_control == 2 || adaptation_field_control == 3)
 	{
 		parseAdaptationField(parser, bitReader);
 	}
 
-	if(adaptation_field_control == 1 || adaptation_field_control == 3)
+	if (adaptation_field_control == 1 || adaptation_field_control == 3)
 	{
 		parseProgramId(parser, bitReader, pid, payload_unit_start_indicator);
 	}
 }
 
-
 // Parse adaptation field
 void parseAdaptationField(TSParser *parser, ABitReader *bitReader)
 {
 	uint32_t adaptation_field_length = getBits(bitReader, 8);
-  if (adaptation_field_length > 0)
+	printf("Adaptation field length: %u\n", adaptation_field_length);
+	if (adaptation_field_length > 0)
 	{
-    skipBits(bitReader, adaptation_field_length * 8);
-  }
+		skipBits(bitReader, adaptation_field_length * 8);
+	}
 }
 
 // Parse program Id
@@ -94,22 +94,22 @@ void parseProgramId(TSParser *parser, ABitReader *bitReader, uint32_t pid, uint3
 
 	if (pid == 0)
 	{
-    if (payload_unit_start_indicator)
+		if (payload_unit_start_indicator)
 		{
-      uint32_t skip = getBits(bitReader, 8);
-      skipBits(bitReader, skip * 8);
-    }
+			uint32_t skip = getBits(bitReader, 8);
+			skipBits(bitReader, skip * 8);
+		}
 
-    parseProgramAssociationTable(parser, bitReader);
-    return;
-  }
+		parseProgramAssociationTable(parser, bitReader);
+		return;
+	}
 
-	for(listItem = parser->mPrograms.mHead; listItem != NULL; listItem=listItem->mNext)
+	for (listItem = parser->mPrograms.mHead; listItem != NULL; listItem = listItem->mNext)
 	{
 		pProgram = (TSProgram *)listItem->mData;
-		if(pid == pProgram->mProgramMapPID)
+		if (pid == pProgram->mProgramMapPID)
 		{
-			if(payload_unit_start_indicator)
+			if (payload_unit_start_indicator)
 			{
 				uint32_t skip = getBits(bitReader, 8);
 				skipBits(bitReader, skip * 8);
@@ -122,7 +122,7 @@ void parseProgramId(TSParser *parser, ABitReader *bitReader, uint32_t pid, uint3
 		else
 		{
 			TSStream *pStream = getStreamByPID(pProgram, pid);
-			if(pStream != NULL)
+			if (pStream != NULL)
 			{
 				parseStream(pStream, payload_unit_start_indicator, bitReader);
 
@@ -142,48 +142,48 @@ void parseProgramId(TSParser *parser, ABitReader *bitReader, uint32_t pid, uint3
 void parseProgramAssociationTable(TSParser *parser, ABitReader *bitReader)
 {
 	size_t i;
-  uint32_t table_id = getBits(bitReader, 8);
-  printf("  table_id = %u\n", table_id);
+	uint32_t table_id = getBits(bitReader, 8);
+	printf("  table_id = %u\n", table_id);
 
-  uint32_t section_syntax_indicator = getBits(bitReader, 1);
-  printf("  section_syntax_indicator = %u\n", section_syntax_indicator);
+	uint32_t section_syntax_indicator = getBits(bitReader, 1);
+	printf("  section_syntax_indicator = %u\n", section_syntax_indicator);
 
-  getBits(bitReader, 1);
-  printf("  reserved = %u\n", getBits(bitReader, 2));
+	getBits(bitReader, 1);
+	printf("  reserved = %u\n", getBits(bitReader, 2));
 
-  uint32_t section_length = getBits(bitReader, 12);
-  printf("  section_length = %u\n", section_length);
+	uint32_t section_length = getBits(bitReader, 12);
+	printf("  section_length = %u\n", section_length);
 
-  printf("  transport_stream_id = %u\n", getBits(bitReader, 16));
-  printf("  reserved = %u\n", getBits(bitReader, 2));
-  printf("  version_number = %u\n", getBits(bitReader, 5));
-  printf("  current_next_indicator = %u\n", getBits(bitReader, 1));
-  printf("  section_number = %u\n", getBits(bitReader, 8));
-  printf("  last_section_number = %u\n", getBits(bitReader, 8));
+	printf("  transport_stream_id = %u\n", getBits(bitReader, 16));
+	printf("  reserved = %u\n", getBits(bitReader, 2));
+	printf("  version_number = %u\n", getBits(bitReader, 5));
+	printf("  current_next_indicator = %u\n", getBits(bitReader, 1));
+	printf("  section_number = %u\n", getBits(bitReader, 8));
+	printf("  last_section_number = %u\n", getBits(bitReader, 8));
 
-  size_t numProgramBytes = (section_length - 5 /* header */ - 4 /* crc */);
+	size_t numProgramBytes = (section_length - 5 /* header */ - 4 /* crc */);
 	printf("  numProgramBytes = %ld\n", numProgramBytes);
 
-  for (i = 0; i < numProgramBytes / 4; ++i)
+	for (i = 0; i < numProgramBytes / 4; ++i)
 	{
-    uint32_t program_number = getBits(bitReader, 16);
-    printf("    program_number = %u\n", program_number);
+		uint32_t program_number = getBits(bitReader, 16);
+		printf("    program_number = %u\n", program_number);
 
-    printf("    reserved = %u\n", getBits(bitReader, 3));
+		printf("    reserved = %u\n", getBits(bitReader, 3));
 
-    if (program_number == 0)
+		if (program_number == 0)
 		{
-      printf("    network_PID = 0x%04x\n", getBits(bitReader, 13));
-    }
+			printf("    network_PID = 0x%04x\n", getBits(bitReader, 13));
+		}
 		else
 		{
-      unsigned programMapPID = getBits(bitReader, 13);
+			unsigned programMapPID = getBits(bitReader, 13);
 
-      printf("    program_map_PID = 0x%04x\n", programMapPID);
+			printf("    program_map_PID = 0x%04x\n", programMapPID);
 			addProgram(parser, programMapPID);
-    }
-  }
-  printf("  CRC = 0x%08x\n", getBits(bitReader, 32));
+		}
+	}
+	printf("  CRC = 0x%08x\n", getBits(bitReader, 32));
 }
 
 // Parse Stream
@@ -191,24 +191,24 @@ void parseStream(TSStream *stream, uint32_t payload_unit_start_indicator, ABitRe
 {
 	size_t payloadSizeBits;
 
-	if(payload_unit_start_indicator)
+	if (payload_unit_start_indicator)
 	{
-		if(stream->mPayloadStarted)
+		if (stream->mPayloadStarted)
 		{
 			flushStreamData(stream);
 		}
 		stream->mPayloadStarted = 1;
 	}
 
-	if(!stream->mPayloadStarted)
+	if (!stream->mPayloadStarted)
 	{
 		return;
 	}
 
 	payloadSizeBits = numBitsLeft(bitReader);
 
-  memcpy(stream->mBuffer + stream->mBufferSize, getBitReaderData(bitReader), payloadSizeBits / 8);
-  stream->mBufferSize += (payloadSizeBits / 8);
+	memcpy(stream->mBuffer + stream->mBufferSize, getBitReaderData(bitReader), payloadSizeBits / 8);
+	stream->mBufferSize += (payloadSizeBits / 8);
 }
 
 // Flush stream data
@@ -226,17 +226,17 @@ void flushStreamData(TSStream *stream)
 void parsePES(TSStream *stream, ABitReader *bitReader)
 {
 	uint32_t packet_startcode_prefix = getBits(bitReader, 24);
-  uint32_t stream_id = getBits(bitReader, 8);
-  uint32_t PES_packet_length = getBits(bitReader, 16);
+	uint32_t stream_id = getBits(bitReader, 8);
+	uint32_t PES_packet_length = getBits(bitReader, 16);
 
-  if (stream_id != 0xbc  // program_stream_map
+	if (stream_id != 0xbc	  // program_stream_map
 		&& stream_id != 0xbe  // padding_stream
 		&& stream_id != 0xbf  // private_stream_2
 		&& stream_id != 0xf0  // ECM
 		&& stream_id != 0xf1  // EMM
 		&& stream_id != 0xff  // program_stream_directory
 		&& stream_id != 0xf2  // DSMCC
-		&& stream_id != 0xf8)   // H.222.1 type E
+		&& stream_id != 0xf8) // H.222.1 type E
 	{
 		uint32_t PTS_DTS_flags;
 		uint32_t ESCR_flag;
@@ -249,83 +249,82 @@ void parsePES(TSStream *stream, ABitReader *bitReader)
 
 		skipBits(bitReader, 8);
 
-    PTS_DTS_flags = getBits(bitReader, 2);
+		PTS_DTS_flags = getBits(bitReader, 2);
 		ESCR_flag = getBits(bitReader, 1);
-    ES_rate_flag = getBits(bitReader, 1);
-    DSM_trick_mode_flag = getBits(bitReader, 1);
-    additional_copy_info_flag = getBits(bitReader, 1);
+		ES_rate_flag = getBits(bitReader, 1);
+		DSM_trick_mode_flag = getBits(bitReader, 1);
+		additional_copy_info_flag = getBits(bitReader, 1);
 
 		skipBits(bitReader, 2);
 
-    PES_header_data_length = getBits(bitReader, 8);
-    optional_bytes_remaining = PES_header_data_length;
+		PES_header_data_length = getBits(bitReader, 8);
+		optional_bytes_remaining = PES_header_data_length;
 
-    if (PTS_DTS_flags == 2 || PTS_DTS_flags == 3)
+		if (PTS_DTS_flags == 2 || PTS_DTS_flags == 3)
 		{
 			skipBits(bitReader, 4);
 			PTS = parseTSTimestamp(bitReader);
-      skipBits(bitReader, 1);
+			skipBits(bitReader, 1);
 
-      optional_bytes_remaining -= 5;
+			optional_bytes_remaining -= 5;
 
-      if (PTS_DTS_flags == 3)
+			if (PTS_DTS_flags == 3)
 			{
-        skipBits(bitReader, 4);
+				skipBits(bitReader, 4);
 
-        DTS = parseTSTimestamp(bitReader);
-        skipBits(bitReader, 1);
+				DTS = parseTSTimestamp(bitReader);
+				skipBits(bitReader, 1);
 
-        optional_bytes_remaining -= 5;
-      }
-    }
+				optional_bytes_remaining -= 5;
+			}
+		}
 
-    if (ESCR_flag)
+		if (ESCR_flag)
 		{
-      skipBits(bitReader, 2);
+			skipBits(bitReader, 2);
 
-      uint64_t ESCR = parseTSTimestamp(bitReader);
+			uint64_t ESCR = parseTSTimestamp(bitReader);
 
-      skipBits(bitReader, 11);
+			skipBits(bitReader, 11);
 
-      optional_bytes_remaining -= 6;
-    }
+			optional_bytes_remaining -= 6;
+		}
 
-    if (ES_rate_flag)
+		if (ES_rate_flag)
 		{
 			skipBits(bitReader, 24);
-      optional_bytes_remaining -= 3;
-    }
+			optional_bytes_remaining -= 3;
+		}
 
-    skipBits(bitReader, optional_bytes_remaining * 8);
+		skipBits(bitReader, optional_bytes_remaining * 8);
 
-    // ES data follows.
-    if (PES_packet_length != 0)
+		// ES data follows.
+		if (PES_packet_length != 0)
 		{
-      uint32_t dataLength = PES_packet_length - 3 - PES_header_data_length;
+			uint32_t dataLength = PES_packet_length - 3 - PES_header_data_length;
 
 			// Signaling we have payload data
-      onPayloadData(stream, PTS_DTS_flags, PTS, DTS, getBitReaderData(bitReader), dataLength);
+			onPayloadData(stream, PTS_DTS_flags, PTS, DTS, getBitReaderData(bitReader), dataLength);
 
-      skipBits(bitReader, dataLength * 8);
-    }
+			skipBits(bitReader, dataLength * 8);
+		}
 		else
 		{
 			size_t payloadSizeBits;
 			// Signaling we have payload data
-      onPayloadData(stream, PTS_DTS_flags, PTS, DTS, getBitReaderData(bitReader), numBitsLeft(bitReader) / 8);
+			onPayloadData(stream, PTS_DTS_flags, PTS, DTS, getBitReaderData(bitReader), numBitsLeft(bitReader) / 8);
 
 			payloadSizeBits = numBitsLeft(bitReader);
-    }
-  }
+		}
+	}
 	else if (stream_id == 0xbe)
-	{  // padding_stream
-    skipBits(bitReader, PES_packet_length * 8);
-  }
+	{ // padding_stream
+		skipBits(bitReader, PES_packet_length * 8);
+	}
 	else
 	{
-    skipBits(bitReader, PES_packet_length * 8);
-  }
-
+		skipBits(bitReader, PES_packet_length * 8);
+	}
 }
 
 int64_t parseTSTimestamp(ABitReader *bitReader)
@@ -344,18 +343,18 @@ int64_t convertPTSToTimestamp(TSStream *stream, uint64_t PTS)
 {
 	if (!stream->mProgram->mFirstPTSValid)
 	{
-    stream->mProgram->mFirstPTSValid = 1;
-    stream->mProgram->mFirstPTS = PTS;
-    PTS = 0;
-  }
+		stream->mProgram->mFirstPTSValid = 1;
+		stream->mProgram->mFirstPTS = PTS;
+		PTS = 0;
+	}
 	else if (PTS < stream->mProgram->mFirstPTS)
 	{
-    PTS = 0;
-  }
+		PTS = 0;
+	}
 	else
 	{
-    PTS -= stream->mProgram->mFirstPTS;
-  }
+		PTS -= stream->mProgram->mFirstPTS;
+	}
 
 	return (PTS * 100) / 9;
 }
@@ -364,11 +363,11 @@ int64_t convertPTSToTimestamp(TSStream *stream, uint64_t PTS)
 void onPayloadData(TSStream *stream, uint32_t PTS_DTS_flag, uint64_t PTS, uint64_t DTS, uint8_t *data, size_t size)
 {
 	int64_t timeUs = convertPTSToTimestamp(stream, PTS);
-	if(stream->mStreamType == TS_STREAM_VIDEO)
+	if (stream->mStreamType == TS_STREAM_VIDEO)
 	{
 		printf("Payload Data!!!! Video (%02x), PTS: %lld, DTS:%lld, Size: %ld\n", stream->mStreamType, PTS, DTS, size);
 	}
-	else if(stream->mStreamType == TS_STREAM_AUDIO)
+	else if (stream->mStreamType == TS_STREAM_AUDIO)
 	{
 		printf("Payload Data!!!! Audio (%02x), PTS: %lld, DTS:%lld, Size: %ld\n", stream->mStreamType, PTS, DTS, size);
 	}
@@ -383,7 +382,6 @@ void addProgram(TSParser *parser, uint32_t programMapPID)
 	program->mProgramMapPID = programMapPID;
 
 	addItemToList(&parser->mPrograms, program);
-
 }
 
 // Add a new stream to the specified program
@@ -408,7 +406,7 @@ void addItemToList(TSPointersList *list, void *data)
 	item->mData = data;
 	item->mNext = NULL;
 
-	if(list->mTail != NULL)
+	if (list->mTail != NULL)
 	{
 		list->mTail->mNext = item;
 		list->mTail = item;
@@ -424,10 +422,10 @@ TSStream *getStreamByPID(TSProgram *program, uint32_t pid)
 {
 	TSPointersListItem *listItem;
 	TSStream *stream;
-	for(listItem = program->mStreams.mHead; listItem != NULL; listItem=listItem->mNext)
+	for (listItem = program->mStreams.mHead; listItem != NULL; listItem = listItem->mNext)
 	{
 		stream = (TSStream *)listItem->mData;
-		if(stream != NULL && stream->mElementaryPID == pid)
+		if (stream != NULL && stream->mElementaryPID == pid)
 		{
 			return stream;
 		}
@@ -440,10 +438,10 @@ TSProgram *getProgramByPID(TSParser *parser, uint32_t pid)
 {
 	TSPointersListItem *listItem;
 	TSProgram *program;
-	for(listItem = parser->mPrograms.mHead; listItem != NULL; listItem=listItem->mNext)
+	for (listItem = parser->mPrograms.mHead; listItem != NULL; listItem = listItem->mNext)
 	{
 		program = (TSProgram *)listItem->mData;
-		if(program != NULL && program->mProgramMapPID == pid)
+		if (program != NULL && program->mProgramMapPID == pid)
 		{
 			return program;
 		}
@@ -476,63 +474,63 @@ void parseProgramMap(TSParser *parser, TSProgram *program, ABitReader *bitReader
 	skipBits(bitReader, 3);
 
 	section_length = getBits(bitReader, 12);
-  printf("  section_length = %u\n", section_length);
-  printf("  program_number = %u\n", getBits(bitReader, 16));
-  printf("  reserved = %u\n", getBits(bitReader, 2));
-  printf("  version_number = %u\n", getBits(bitReader, 5));
-  printf("  current_next_indicator = %u\n", getBits(bitReader, 1));
-  printf("  section_number = %u\n", getBits(bitReader, 8));
-  printf("  last_section_number = %u\n", getBits(bitReader, 8));
-  printf("  reserved = %u\n", getBits(bitReader, 3));
-  printf("  PCR_PID = 0x%04x\n", getBits(bitReader, 13));
-  printf("  reserved = %u\n", getBits(bitReader, 4));
+	printf("  section_length = %u\n", section_length);
+	printf("  program_number = %u\n", getBits(bitReader, 16));
+	printf("  reserved = %u\n", getBits(bitReader, 2));
+	printf("  version_number = %u\n", getBits(bitReader, 5));
+	printf("  current_next_indicator = %u\n", getBits(bitReader, 1));
+	printf("  section_number = %u\n", getBits(bitReader, 8));
+	printf("  last_section_number = %u\n", getBits(bitReader, 8));
+	printf("  reserved = %u\n", getBits(bitReader, 3));
+	printf("  PCR_PID = 0x%04x\n", getBits(bitReader, 13));
+	printf("  reserved = %u\n", getBits(bitReader, 4));
 
-  program_info_length = getBits(bitReader, 12);
-  printf("  program_info_length = %u\n", program_info_length);
+	program_info_length = getBits(bitReader, 12);
+	printf("  program_info_length = %u\n", program_info_length);
 
-  skipBits(bitReader, program_info_length * 8);  // skip descriptors
+	skipBits(bitReader, program_info_length * 8); // skip descriptors
 
-  // infoBytesRemaining is the number of bytes that make up the
-  // variable length section of ES_infos. It does not include the
-  // final CRC.
+	// infoBytesRemaining is the number of bytes that make up the
+	// variable length section of ES_infos. It does not include the
+	// final CRC.
 	infoBytesRemaining = section_length - 9 - program_info_length - 4;
 
-  while (infoBytesRemaining > 0)
+	while (infoBytesRemaining > 0)
 	{
 		streamType = getBits(bitReader, 8);
-    printf("    stream_type = 0x%02x\n", streamType);
+		printf("    stream_type = 0x%02x\n", streamType);
 
-    printf("    reserved = %u\n", getBits(bitReader, 3));
+		printf("    reserved = %u\n", getBits(bitReader, 3));
 
-    elementaryPID = getBits(bitReader, 13);
-    printf("    elementary_PID = 0x%04x\n", elementaryPID);
+		elementaryPID = getBits(bitReader, 13);
+		printf("    elementary_PID = 0x%04x\n", elementaryPID);
 
-    printf("    reserved = %u\n", getBits(bitReader, 4));
+		printf("    reserved = %u\n", getBits(bitReader, 4));
 
-    ES_info_length = getBits(bitReader, 12);
-    printf("    ES_info_length = %u\n", ES_info_length);
+		ES_info_length = getBits(bitReader, 12);
+		printf("    ES_info_length = %u\n", ES_info_length);
 
-    info_bytes_remaining = ES_info_length;
-    while (info_bytes_remaining >= 2)
+		info_bytes_remaining = ES_info_length;
+		while (info_bytes_remaining >= 2)
 		{
 			uint32_t descLength;
-      printf("      tag = 0x%02x\n", getBits(bitReader, 8));
+			printf("      tag = 0x%02x\n", getBits(bitReader, 8));
 
-      descLength = getBits(bitReader, 8);
-      printf("      len = %u\n", descLength);
+			descLength = getBits(bitReader, 8);
+			printf("      len = %u\n", descLength);
 
-      skipBits(bitReader, descLength * 8);
+			skipBits(bitReader, descLength * 8);
 
-      info_bytes_remaining -= descLength + 2;
-    }
+			info_bytes_remaining -= descLength + 2;
+		}
 
-		if(getStreamByPID(program, elementaryPID) == NULL)
+		if (getStreamByPID(program, elementaryPID) == NULL)
 			addStream(program, elementaryPID, streamType);
 
-    infoBytesRemaining -= 5 + ES_info_length;
-  }
+		infoBytesRemaining -= 5 + ES_info_length;
+	}
 
-  printf("  CRC = 0x%08x\n", getBits(bitReader, 32));
+	printf("  CRC = 0x%08x\n", getBits(bitReader, 32));
 	printf("****** PROGRAM MAP *****\n");
 }
 
@@ -542,12 +540,12 @@ void freeProgramResources(TSProgram *program)
 	// Free Streams
 	TSPointersListItem *item;
 	TSStream *pStream;
-	while(program->mStreams.mHead != NULL)
+	while (program->mStreams.mHead != NULL)
 	{
 		item = program->mStreams.mHead;
 		program->mStreams.mHead = item->mNext;
 
-		if(item->mData != NULL)
+		if (item->mData != NULL)
 		{
 			pStream = (TSStream *)item->mData;
 			free(pStream);
@@ -557,19 +555,18 @@ void freeProgramResources(TSProgram *program)
 	}
 }
 
-
 // Free parser resources
 void freeParserResources(TSParser *parser)
 {
 	// Free Programs
 	TSPointersListItem *item;
 	TSProgram *pProgram;
-	while(parser->mPrograms.mHead != NULL)
+	while (parser->mPrograms.mHead != NULL)
 	{
 		item = parser->mPrograms.mHead;
 		parser->mPrograms.mHead = item->mNext;
 
-		if(item->mData != NULL)
+		if (item->mData != NULL)
 		{
 			pProgram = (TSProgram *)item->mData;
 			freeProgramResources(pProgram);
@@ -585,12 +582,12 @@ void signalDiscontinuity(TSParser *parser, int isSeek)
 {
 	TSPointersListItem *item;
 	TSProgram *pProgram;
-	while(parser->mPrograms.mHead != NULL)
+	while (parser->mPrograms.mHead != NULL)
 	{
 		item = parser->mPrograms.mHead;
 		parser->mPrograms.mHead = item->mNext;
 
-		if(item->mData != NULL)
+		if (item->mData != NULL)
 		{
 			pProgram = (TSProgram *)item->mData;
 			signalDiscontinuityToProgram(pProgram, isSeek);
@@ -603,12 +600,12 @@ void signalDiscontinuityToProgram(TSProgram *program, int isSeek)
 {
 	TSPointersListItem *item;
 	TSStream *pStream;
-	while(program->mStreams.mHead != NULL)
+	while (program->mStreams.mHead != NULL)
 	{
 		item = program->mStreams.mHead;
 		program->mStreams.mHead = item->mNext;
 
-		if(item->mData != NULL)
+		if (item->mData != NULL)
 		{
 			pStream = (TSStream *)item->mData;
 			signalDiscontinuityToStream(pStream, isSeek);
@@ -620,5 +617,5 @@ void signalDiscontinuityToProgram(TSProgram *program, int isSeek)
 void signalDiscontinuityToStream(TSStream *stream, int isSeek)
 {
 	stream->mPayloadStarted = 0;
-  stream->mBufferSize = 0;
+	stream->mBufferSize = 0;
 }

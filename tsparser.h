@@ -19,26 +19,25 @@
 #ifndef __TS_PARSER_H__
 #define __TS_PARSER_H__
 
+#define TS_PACKET_SIZE 188
+#define TS_SYNC 0x47
+#define TS_DISCONTINUITY 0x0
 
-#define TS_PACKET_SIZE	  188
-#define TS_SYNC			  0x47
-#define TS_DISCONTINUITY  0x0
-
-#define TS_STREAM_VIDEO	  0x1b
-#define TS_STREAM_AUDIO   0x0f
+#define TS_STREAM_VIDEO 0x1b
+#define TS_STREAM_AUDIO 0x0f
 
 // Linked lists structure
 typedef struct TSPointersListItem
 {
 	void *mData;
 	struct TSPointersListItem *mNext;
-}TSPointersListItem;
+} TSPointersListItem;
 
 typedef struct TSSPointersList
 {
 	TSPointersListItem *mHead;
 	TSPointersListItem *mTail;
-}TSPointersList;
+} TSPointersList;
 
 // Programs (one TS file could have 1 or more programs)
 typedef struct TSProgram
@@ -48,7 +47,7 @@ typedef struct TSProgram
 	int mFirstPTSValid;
 
 	TSPointersList mStreams;
-}TSProgram;
+} TSProgram;
 
 // Streams (one program could have one or more streams)
 typedef struct TSStream
@@ -59,15 +58,15 @@ typedef struct TSStream
 	uint32_t mStreamType;
 	uint32_t mPayloadStarted;
 
-	char mBuffer[128*1024];
+	char mBuffer[128 * 1024];
 	int mBufferSize;
-}TSStream;
+} TSStream;
 
 // Parser. Keeps a reference to the list of programs
 typedef struct TSParser
 {
 	TSPointersList mPrograms;
-}TSParser;
+} TSParser;
 
 void signalDiscontinuity(TSParser *parser, int isSeek);
 void signalDiscontinuityToProgram(TSProgram *program, int isSeek);

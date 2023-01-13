@@ -26,7 +26,6 @@
 #include "bitreader.h"
 #include "tsparser.h"
 
-
 // Main method
 int main(int argc, char *argv[])
 {
@@ -38,28 +37,28 @@ int main(int argc, char *argv[])
 	memset(&tsParser, 0, sizeof(TSParser));
 
 	fd = open(argv[1], O_RDONLY);
-	if(fd < 0)
+	if (fd < 0)
 	{
 		printf("Error opening the stream\nSyntax: tsunpacket FileToParse.ts\n");
 		return -1;
 	}
 
 	// Parse file while we can read full TS packets
-	while(1)
+	while (1)
 	{
 		bytes_read = read(fd, packet_buffer, TS_PACKET_SIZE);
 
-		if(packet_buffer[0] == TS_DISCONTINUITY)
+		if (packet_buffer[0] == TS_DISCONTINUITY)
 		{
 			printf("Discontinuity detected!\n");
 			signalDiscontinuity(&tsParser, 0);
 		}
-		else if(bytes_read < TS_PACKET_SIZE)
+		else if (bytes_read < TS_PACKET_SIZE)
 		{
 			printf("End of file!\n");
 			break;
 		}
-		else if(packet_buffer[0] == TS_SYNC)
+		else if (packet_buffer[0] == TS_SYNC)
 		{
 			ABitReader bitReader;
 			initABitReader(&bitReader, packet_buffer, bytes_read);
